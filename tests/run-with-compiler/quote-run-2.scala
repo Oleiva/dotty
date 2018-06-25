@@ -15,5 +15,6 @@ object Test {
     println(powerCode(1, '(5)).show)
     println(powerCode(2, '(5)).show)
     println(powerCode(3, '(5)).show)
+    println(powerCode(22, '(5)).show)
   }
 }
