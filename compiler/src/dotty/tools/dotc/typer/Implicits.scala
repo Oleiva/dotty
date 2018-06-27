@@ -811,36 +811,42 @@ trait Implicits { self: Typer =>
    *  !!! todo: catch potential cycles
    */
   def inferImplicit(pt: Type, argument: Tree, pos: Position)(implicit ctx: Context): SearchResult = track("inferImplicit") {
-    assert(ctx.phase.allowsImplicitSearch,
-      if (argument.isEmpty) i"missing implicit parameter of type $pt after typer"
-      else i"type error: ${argument.tpe} does not conform to $pt${err.whyNoMatchStr(argument.tpe, pt)}")
-    trace(s"search implicit ${pt.show}, arg = ${argument.show}: ${argument.tpe.show}", implicits, show = true) {
-      assert(!pt.isInstanceOf[ExprType])
-      val result = new ImplicitSearch(pt, argument, pos).bestImplicit(contextual = true)
-      result match {
-        case result: SearchSuccess =>
-          result.tstate.commit()
-          implicits.println(i"success: $result")
-          implicits.println(i"committing ${result.tstate.constraint} yielding ${ctx.typerState.constraint} in ${ctx.typerState}")
-          result
-        case result: SearchFailure if result.isAmbiguous =>
-          val deepPt = pt.deepenProto
-          if (deepPt ne pt) inferImplicit(deepPt, argument, pos)
-          else if (ctx.scala2Mode && !ctx.mode.is(Mode.OldOverloadingResolution)) {
-            inferImplicit(pt, argument, pos)(ctx.addMode(Mode.OldOverloadingResolution)) match {
-              case altResult: SearchSuccess =>
-                ctx.migrationWarning(
-                  s"According to new implicit resolution rules, this will be ambiguous:\n${result.reason.explanation}",
-                  pos)
-                altResult
-              case _ =>
-                result
+    try {
+      assert(ctx.phase.allowsImplicitSearch,
+        if (argument.isEmpty) i"missing implicit parameter of type $pt after typer"
+        else i"type error: ${argument.tpe} does not conform to $pt${err.whyNoMatchStr(argument.tpe, pt)}")
+      trace(s"search implicit ${pt.show}, arg = ${argument.show}: ${argument.tpe.show}", implicits, show = true) {
+        assert(!pt.isInstanceOf[ExprType])
+        val result = new ImplicitSearch(pt, argument, pos).bestImplicit(contextual = true)
+        result match {
+          case result: SearchSuccess =>
+            result.tstate.commit()
+            implicits.println(i"success: $result")
+            implicits.println(i"committing ${result.tstate.constraint} yielding ${ctx.typerState.constraint} in ${ctx.typerState}")
+            result
+          case result: SearchFailure if result.isAmbiguous =>
+            val deepPt = pt.deepenProto
+            if (deepPt ne pt) inferImplicit(deepPt, argument, pos)
+            else if (ctx.scala2Mode && !ctx.mode.is(Mode.OldOverloadingResolution)) {
+              inferImplicit(pt, argument, pos)(ctx.addMode(Mode.OldOverloadingResolution)) match {
+                case altResult: SearchSuccess =>
+                  ctx.migrationWarning(
+                    s"According to new implicit resolution rules, this will be ambiguous:\n${result.reason.explanation}",
+                    pos)
+                  altResult
+                case _ =>
+                  result
+              }
             }
-          }
-          else result
-        case _ =>
-          result
+            else result
+          case _ =>
+            result
+        }
       }
+    } catch {
+      case ce: CyclicReference =>
+        ce.inImplicitSearch = true
+        throw ce
     }
   }
 

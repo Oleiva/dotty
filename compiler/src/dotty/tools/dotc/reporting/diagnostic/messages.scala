@@ -1299,8 +1299,10 @@ object messages {
     val kind = "Syntax"
     val msg = hl"""cyclic reference involving implicit $cycleSym"""
     val explanation =
-      hl"""|This happens when the right hand-side of $cycleSym's definition involves an implicit search.
-           |To avoid this error, give `${cycleSym.name}` an explicit type.
+      hl"""|$cycleSym is declared as part of a cycle which makes it impossible for the
+           |compiler to decide upon ${cycleSym.name}'s type.
+           |This might happen when the right hand-side of $cycleSym's definition involves an implicit search.
+           |To avoid this error, try giving `${cycleSym.name}` an explicit type.
            |""".stripMargin
   }
 
@@ -2105,5 +2107,16 @@ object messages {
       s"The highlighted type test will always succeed since the scrutinee type ($foundCls)" + addendum
     }
     val explanation = ""
+  }
+
+  // Relative of CyclicReferenceInvolvingImplicit and RecursiveValueNeedsResultType
+  case class TermMemberNeedsNeedsResultTypeForImplicitSearch(cycleSym: Symbol)(implicit ctx: Context)
+    extends Message(TermMemberNeedsNeedsResultTypeForImplicitSearchID) {
+    val kind = "Syntax"
+    val msg = hl"""$cycleSym needs result type because its right-hand side attempts implicit search"""
+    val explanation =
+      hl"""|The right hand-side of $cycleSym's definition requires an implicit search at the highlighted position.
+           |To avoid this error, give `${cycleSym.name}` an explicit type.
+           |""".stripMargin
   }
 }
