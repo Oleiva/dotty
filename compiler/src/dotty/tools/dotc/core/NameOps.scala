@@ -49,7 +49,8 @@ object NameOps {
     }
   }
 
-  implicit class NameDecorator[N <: Name](val name: N) extends AnyVal {
+  implicit class NameDecorator[N <: Name](val name_ : N) extends AnyVal {
+    private def name = name_
     import nme._
 
     def testSimple(f: SimpleName => Boolean): Boolean = name match {
@@ -233,12 +234,12 @@ object NameOps {
       case nme.clone_ => nme.clone_
     }
 
-    def specializedFor(classTargs: List[Types.Type], classTargsNames: List[Name], methodTargs: List[Types.Type], methodTarsNames: List[Name])(implicit ctx: Context): name.ThisName = {
+    def specializedFor(classTargs: List[Types.Type], classTargsNames: List[Name], methodTargs: List[Types.Type], methodTarsNames: List[Name])(implicit ctx: Context): name_.ThisName = {
 
       val methodTags: Seq[Name] = (methodTargs zip methodTarsNames).sortBy(_._2).map(x => defn.typeTag(x._1))
       val classTags: Seq[Name] = (classTargs zip classTargsNames).sortBy(_._2).map(x => defn.typeTag(x._1))
 
-      name.likeSpaced(name ++ nme.specializedTypeNames.prefix ++
+      name_.likeSpaced(name ++ nme.specializedTypeNames.prefix ++
         methodTags.fold(nme.EMPTY)(_ ++ _) ++ nme.specializedTypeNames.separator ++
         classTags.fold(nme.EMPTY)(_ ++ _) ++ nme.specializedTypeNames.suffix)
     }
@@ -271,7 +272,7 @@ object NameOps {
     }
   }
 
-  implicit class TermNameDecorator(val name: TermName) extends AnyVal {
+  implicit class TermNameDecorator(private val name: TermName) extends AnyVal {
     import nme._
 
     def setterName: TermName = name.exclude(FieldName) ++ str.SETTER_SUFFIX
