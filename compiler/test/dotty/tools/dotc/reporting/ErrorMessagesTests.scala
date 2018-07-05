@@ -260,7 +260,25 @@ class ErrorMessagesTests extends ErrorMessagesTest {
       assertEquals("value x", denot.show)
     }
 
+  // This is what we get here, not sure this is accurate but it's the best we can do.
   @Test def cyclicReferenceInvolvingImplicit =
+    checkMessagesAfter(FrontEnd.name) {
+      """
+        |class A {
+        |  implicit val x: T = ???
+        |  type T <: x.type // error: cyclic reference involving value x
+        |}
+      """.stripMargin
+    }
+      .expect { (ictx, messages) =>
+        implicit val ctx: Context = ictx
+
+        assertMessageCount(1, messages)
+        val CyclicReferenceInvolving(denot) :: Nil = messages
+        assertEquals("value x", denot.show)
+      }
+
+  @Test def termMemberNeedsNeedsResultTypeForImplicitSearch =
     checkMessagesAfter(FrontEnd.name) {
       """
         |object implicitDefs {
@@ -276,9 +294,52 @@ class ErrorMessagesTests extends ErrorMessagesTest {
       implicit val ctx: Context = ictx
 
       assertMessageCount(1, messages)
-      val CyclicReferenceInvolvingImplicit(tree) :: Nil = messages
+      val TermMemberNeedsNeedsResultTypeForImplicitSearch(tree) :: Nil = messages
       assertEquals("x", tree.name.show)
     }
+
+  @Test def implicitSearchForcesImplicitRetType_i4709 =
+    checkMessagesAfter(FrontEnd.name) {
+      """
+        |import scala.language.implicitConversions
+        |
+        |class Context
+        |class ContextBase { def settings = 1 }
+        |
+        |class Test {
+        |  implicit def toBase(ctx: Context): ContextBase = ???
+        |
+        |  def test(ctx0: Context) = {
+        |    implicit val ctx = { ctx0.settings; ??? }
+        |  }
+        |}
+      """.stripMargin
+    }
+    .expect{ (ictx, messages) =>
+      implicit val ctx: Context = ictx
+
+      assertMessageCount(1, messages)
+      val TermMemberNeedsNeedsResultTypeForImplicitSearch(tree) :: Nil = messages
+      assertEquals("ctx", tree.name.show)
+    }
+
+  @Test def implicitSearchForcesNonImplicitRetTypeOnExplicitImport_i3253 =
+    checkMessagesAfter(FrontEnd.name) {
+      """
+        |import Test.test
+        |
+        |object Test {
+        |  def test = "  " * 10
+        |}
+      """.stripMargin
+    }
+      .expect{ (ictx, messages) =>
+        implicit val ctx: Context = ictx
+
+        assertMessageCount(1, messages)
+        val TermMemberNeedsNeedsResultTypeForImplicitSearch(tree) :: Nil = messages
+        assertEquals("test", tree.name.show)
+      }
 
   @Test def superQualMustBeParent =
     checkMessagesAfter(FrontEnd.name) {
