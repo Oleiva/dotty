@@ -110,12 +110,12 @@ class CyclicReference private (val denot: SymDenotation, var inImplicitSearch: B
     def errorMsg(cx: Context): Message = {
       if (cx.mode is Mode.InferringReturnType) {
         cx.tree match {
-          case tree: untpd.ValOrDefDef if inImplicitSearch && !tree.tpt.typeOpt.exists && tree.name == cycleSym.name =>
+          case tree: untpd.ValOrDefDef if inImplicitSearch && !tree.tpt.typeOpt.exists =>
             // Can happen in implicit defs (#4709) or outside (#3253).
             TermMemberNeedsNeedsResultTypeForImplicitSearch(cycleSym)
-          case tree: untpd.DefDef if !tree.tpt.typeOpt.exists && tree.name == cycleSym.name =>
+          case tree: untpd.DefDef if !tree.tpt.typeOpt.exists =>
             OverloadedOrRecursiveMethodNeedsResultType(tree.name)
-          case tree: untpd.ValDef if !tree.tpt.typeOpt.exists && tree.name == cycleSym.name =>
+          case tree: untpd.ValDef if !tree.tpt.typeOpt.exists =>
             RecursiveValueNeedsResultType(tree.name)
           case _ =>
             errorMsg(cx.outer)
