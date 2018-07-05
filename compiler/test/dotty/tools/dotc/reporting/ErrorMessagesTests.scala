@@ -260,8 +260,7 @@ class ErrorMessagesTests extends ErrorMessagesTest {
       assertEquals("value x", denot.show)
     }
 
-  // This is what we get here, not sure this is accurate but it's the best we can do.
-  @Test def cyclicReferenceInvolvingImplicit =
+  @Test def cyclicReferenceInvolving2 =
     checkMessagesAfter(FrontEnd.name) {
       """
         |class A {
