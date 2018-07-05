@@ -112,8 +112,10 @@ class CyclicReference private (val denot: SymDenotation, var inImplicitSearch: B
         cx.tree match {
           case tree: untpd.ValOrDefDef if inImplicitSearch && !tree.tpt.typeOpt.exists =>
             // Can happen in implicit defs (#4709) or outside (#3253).
-            TermMemberNeedsNeedsResultTypeForImplicitSearch(cycleSym)
+            TermMemberNeedsNeedsResultTypeForImplicitSearch(tree.name)
           case tree: untpd.DefDef if !tree.tpt.typeOpt.exists =>
+            // The reported symbol is more correct, but it might *not* be a method!
+            // OverloadedOrRecursiveMethodNeedsResultType(cycleSym.name)
             OverloadedOrRecursiveMethodNeedsResultType(tree.name)
           case tree: untpd.ValDef if !tree.tpt.typeOpt.exists =>
             RecursiveValueNeedsResultType(tree.name)

@@ -291,7 +291,7 @@ class ErrorMessagesTests extends ErrorMessagesTest {
 
         assertMessageCount(1, messages)
         val OverloadedOrRecursiveMethodNeedsResultType(name) :: Nil = messages
-        assertEquals("odd", name.show)
+        assertEquals("even", name.show)
       }
 
   @Test def mutualRecursion_i2001a =
@@ -312,8 +312,8 @@ class ErrorMessagesTests extends ErrorMessagesTest {
         implicit val ctx: Context = ictx
 
         assertMessageCount(1, messages)
-        val CyclicReferenceInvolving(denot) :: Nil = messages
-        assertEquals("value x", denot.show)
+        val OverloadedOrRecursiveMethodNeedsResultType(denot) :: Nil = messages
+        assertEquals("foo", denot.show)
       }
 
 
@@ -333,8 +333,8 @@ class ErrorMessagesTests extends ErrorMessagesTest {
       implicit val ctx: Context = ictx
 
       assertMessageCount(1, messages)
-      val TermMemberNeedsNeedsResultTypeForImplicitSearch(tree) :: Nil = messages
-      assertEquals("x", tree.name.show)
+      val TermMemberNeedsNeedsResultTypeForImplicitSearch(name) :: Nil = messages
+      assertEquals("x", name.show)
     }
 
   @Test def implicitSearchForcesImplicitRetType_i4709 =
@@ -358,8 +358,8 @@ class ErrorMessagesTests extends ErrorMessagesTest {
       implicit val ctx: Context = ictx
 
       assertMessageCount(1, messages)
-      val TermMemberNeedsNeedsResultTypeForImplicitSearch(tree) :: Nil = messages
-      assertEquals("ctx", tree.name.show)
+      val TermMemberNeedsNeedsResultTypeForImplicitSearch(name) :: Nil = messages
+      assertEquals("ctx", name.show)
     }
 
   @Test def implicitSearchForcesNonImplicitRetTypeOnExplicitImport_i3253 =
@@ -376,8 +376,8 @@ class ErrorMessagesTests extends ErrorMessagesTest {
         implicit val ctx: Context = ictx
 
         assertMessageCount(1, messages)
-        val TermMemberNeedsNeedsResultTypeForImplicitSearch(tree) :: Nil = messages
-        assertEquals("test", tree.name.show)
+        val TermMemberNeedsNeedsResultTypeForImplicitSearch(name) :: Nil = messages
+        assertEquals("test", name.show)
       }
 
   @Test def superQualMustBeParent =
