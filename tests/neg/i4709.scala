@@ -7,4 +7,5 @@ class Test {
   def test(ctx0: Context) = {
     implicit val ctx = { ctx0.settings; ??? } // error
   }
+  def f: Unit = { implicitly[Int]; implicit val i = implicitly[Int] } // error
 }

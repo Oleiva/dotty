@@ -277,6 +277,46 @@ class ErrorMessagesTests extends ErrorMessagesTest {
         assertEquals("value x", denot.show)
       }
 
+  @Test def mutualRecursionre_i2001 =
+    checkMessagesAfter(FrontEnd.name) {
+      """
+        |class A {
+        |  def odd(x: Int) = if (x == 0) false else !even(x-1)
+        |  def even(x: Int) = if (x == 0) true else !odd(x-1) // error: overloaded or recursive method needs result type
+        |}
+      """.stripMargin
+    }
+      .expect { (ictx, messages) =>
+        implicit val ctx: Context = ictx
+
+        assertMessageCount(1, messages)
+        val OverloadedOrRecursiveMethodNeedsResultType(name) :: Nil = messages
+        assertEquals("odd", name.show)
+      }
+
+  @Test def mutualRecursion_i2001a =
+    checkMessagesAfter(FrontEnd.name) {
+      """
+        |class A {
+        |  def odd(x: Int) = if (x == 0) false else !even(x-1)
+        |  def even(x: Int) = {
+        |    def foo = {
+        |      if (x == 0) true else !odd(x-1) // error: overloaded or recursive method needs result type
+        |    }
+        |    false
+        |  }
+        |}
+      """.stripMargin
+    }
+      .expect { (ictx, messages) =>
+        implicit val ctx: Context = ictx
+
+        assertMessageCount(1, messages)
+        val CyclicReferenceInvolving(denot) :: Nil = messages
+        assertEquals("value x", denot.show)
+      }
+
+
   @Test def termMemberNeedsNeedsResultTypeForImplicitSearch =
     checkMessagesAfter(FrontEnd.name) {
       """
